@@ -1,0 +1,70 @@
+{
+  "timestamp": "2026-03-13T22:22:37.788Z",
+  "produtos": [
+    {
+      "_id": "69b48d6224fe9dd1c153f47b",
+      "nome": "sushi1",
+      "descricao": "arroz com salmão quente",
+      "preco": 67.99,
+      "categoriaId": {
+        "_id": "69ab68b032e6a7c6fb05f4c1",
+        "nome": "Lanches"
+      },
+      "ativo": true,
+      "imagem": "",
+      "createdAt": "2026-03-13T22:19:14.903Z",
+      "updatedAt": "2026-03-13T22:22:05.780Z",
+      "__v": 0
+    },
+    {
+      "_id": "69b489ccc8b8455c91f643b7",
+      "nome": "Teste API - 1773439436393",
+      "descricao": "Produto de teste criado automaticamente",
+      "preco": 29.99,
+      "categoriaId": {
+        "_id": "69ab68b032e6a7c6fb05f4c1",
+        "nome": "Lanches"
+      },
+      "ativo": true,
+      "imagem": "",
+      "createdAt": "2026-03-13T22:03:56.440Z",
+      "updatedAt": "2026-03-13T22:03:56.440Z",
+      "__v": 0
+    },
+    {
+      "_id": "69ab68c932e6a7c6fb05f4c4",
+      "nome": "X-Burger",
+      "descricao": "Hamb�rguer artesanal com queijo",
+      "preco": 28.9,
+      "categoriaId": {
+        "_id": "69ab68b032e6a7c6fb05f4c1",
+        "nome": "Lanches"
+      },
+      "ativo": true,
+      "imagem": "",
+      "createdAt": "2026-03-06T23:52:41.356Z",
+      "updatedAt": "2026-03-06T23:52:41.356Z",
+      "__v": 0
+    }
+  ],
+  "categorias": [
+    {
+      "_id": "69ab68b032e6a7c6fb05f4c1",
+      "nome": "Lanches",
+      "createdAt": "2026-03-06T23:52:16.598Z",
+      "updatedAt": "2026-03-06T23:52:16.598Z",
+      "__v": 0
+    },
+    {
+      "_id": "69b48d2024fe9dd1c153f476",
+      "nome": "pizza",
+      "createdAt": "2026-03-13T22:18:08.943Z",
+      "updatedAt": "2026-03-13T22:18:08.943Z",
+      "__v": 0
+    }
+  ],
+  "resumo": {
+    "totalProdutos": 3,
+    "totalCategorias": 2
+  }
+}

@@ -1,0 +1,229 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Microserviço de Produtos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .meta {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card h3 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .status-online {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍔 Microserviço de Produtos</h1>
+            <p class="meta">Dashboard de Dados em Tempo Real</p>
+            <div class="stats">
+                <div class="stat-card">
+                    <h3>3</h3>
+                    <p>Produtos Cadastrados</p>
+                </div>
+                <div class="stat-card">
+                    <h3>2</h3>
+                    <p>Categorias</p>
+                </div>
+                <div class="stat-card">
+                    <h3 class="status-online">ONLINE</h3>
+                    <p>Status do Servidor</p>
+                </div>
+            </div>
+        </header>
+        
+        <div class="section">
+            <h2>📦 Produtos</h2>
+            
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Nome</th>
+                            <th>Descrição</th>
+                            <th>Preço</th>
+                            <th>Data de Criação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+            <tr>
+                <td>1</td>
+                <td>sushi1</td>
+                <td>arroz com salmão quente</td>
+                <td>R$ 67.99</td>
+                <td>13/03/2026</td>
+            </tr>
+        
+            <tr>
+                <td>2</td>
+                <td>Teste API - 1773439436393</td>
+                <td>Produto de teste criado automaticamente</td>
+                <td>R$ 29.99</td>
+                <td>13/03/2026</td>
+            </tr>
+        
+            <tr>
+                <td>3</td>
+                <td>X-Burger</td>
+                <td>Hamb�rguer artesanal com queijo</td>
+                <td>R$ 28.90</td>
+                <td>06/03/2026</td>
+            </tr>
+        
+                    </tbody>
+                </table>
+            
+        </div>
+        
+        <div class="section">
+            <h2>🏷️ Categorias</h2>
+            
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Nome</th>
+                            <th>Data de Criação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+            <tr>
+                <td>1</td>
+                <td>Lanches</td>
+                <td>06/03/2026</td>
+            </tr>
+        
+            <tr>
+                <td>2</td>
+                <td>pizza</td>
+                <td>13/03/2026</td>
+            </tr>
+        
+                    </tbody>
+                </table>
+            
+        </div>
+        
+        <footer>
+            <p>Gerado em 13/03/2026, 19:22:37 • Sistema de Restaurante v1.0</p>
+        </footer>
+    </div>
+</body>
+</html>
+        
