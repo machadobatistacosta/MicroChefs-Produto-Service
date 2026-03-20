@@ -67,6 +67,15 @@ To run the tests, use the following command:
 npm test
 ```
 
+## Distributed Cluster (Election Algorithms)
+
+This microservice now supports running in a highly available, decentralized cluster using Leader Election algorithms (such as the **Bully Algorithm**). The cluster forms a P2P network where instances elect a leader automatically to handle write operations, while replicas handle read operations. Failover is fully automatic.
+
+All distributed systems scripts are located in the `distribuited-systems/` directory.
+
+To run the cluster and test the automatic failover, please refer to the detailed documentation located at:
+- [`RODAR_CLUSTER_BULLY.md`](./RODAR_CLUSTER_BULLY.md)
+
 ## License
 
 This project is licensed under the MIT License.
