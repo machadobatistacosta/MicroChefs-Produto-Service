@@ -115,10 +115,6 @@ class BullyElectionNode extends EventEmitter {
     this.currentEpoch = 0;        // Versão de MINHA eleição atual
     this.coordinatorEpoch = 0;    // Versão do LÍDER que conheço
     
-    // ✅ NEW: Sincronário de startup - rastrear quais nós estão READY
-    this.readyNodes = new Set([nodeId]); // Começa com ele próprio
-    this.electionCanStart = false;
-    
     console.log(`   🎯 BullyNode criado com ID=${this.nodeId}`);
     console.log(`   🔗 Outros nós conhecidos: ${this.allNodeIds.filter(id => id !== this.nodeId).join(', ')}`);
   }
@@ -135,17 +131,12 @@ class BullyElectionNode extends EventEmitter {
           reconnection: true,
           reconnectionDelay: 1000,
           reconnectionDelayMax: 5000,
-          reconnectionAttempts: 5,
+          reconnectionAttempts: Infinity,
           transports: ['websocket', 'polling']
         });
 
         socket.on('connect', () => {
           console.log(`   ✅ Conectado a nó em ${otherConfig.host}:${otherConfig.port}`);
-        });
-
-        socket.on('ready_message', (data) => {
-          console.log(`   🤝 [${this.config.name}] Recebeu READY de ${data.fromName} (ID=${data.fromId})`);
-          this.readyNodes.add(data.fromId);
         });
 
         socket.on('election_message', (data) => {
@@ -179,46 +170,6 @@ class BullyElectionNode extends EventEmitter {
   }
 
   /**
-   * ✅ NEW: Sincronizar startup com Ready Handshake
-   * Todos os nós precisam estar prontos antes de iniciar eleição
-   */
-  async waitForAllNodesToBeReady() {
-    console.log(`\n   🤝 Iniciando Ready Handshake...`);
-    
-    // Enviar "i-am-ready" para todos os outros nós
-    for (const socket of this.otherNodes.values()) {
-      if (socket && socket.connected) {
-        socket.emit('ready_message', {
-          fromId: this.nodeId,
-          fromName: this.config.name,
-          timestamp: Date.now()
-        });
-      }
-    }
-    
-    // Aguardar que todos os nós sinalizem READY
-    const maxWaitTime = 30000; // 30 segundos máximo (dá tempo para P3 iniciar com 4s de delay)
-    const startTime = Date.now();
-    
-    while (this.readyNodes.size < this.allNodeIds.length) {
-      if (Date.now() - startTime > maxWaitTime) {
-        console.log(`   ⚠️  Timeout aguardando todos nós ficarem READY`);
-        console.log(`   📊 Ready nodes: ${Array.from(this.readyNodes).sort().join(', ')} / ${this.allNodeIds.join(', ')}`);
-        break;
-      }
-      
-      // Mostrar progresso
-      if (this.readyNodes.size !== this.allNodeIds.length) {
-        console.log(`   ⏳ Aguardando... ${this.readyNodes.size}/${this.allNodeIds.length} nodes prontos`);
-      }
-      
-      await new Promise(r => setTimeout(r, 500));
-    }
-    
-    console.log(`   ✅ TODOS OS NODES PRONTOS! = ${Array.from(this.readyNodes).sort().join(', ')}`);
-    this.electionCanStart = true;
-  }
-  /**
    * ✅ NEW: Iniciar heartbeat monitor
    */
   startHeartbeatMonitor() {
@@ -232,6 +183,10 @@ class BullyElectionNode extends EventEmitter {
         if (timeSinceLastHeartbeat > this.heartbeatTimeout) {
           console.log(`\n   ❌ [${this.config.name}] LÍDER (ID=${this.coordinatorId}) NÃO RESPONDE!`);
           console.log(`   🗳️  Iniciando eleição automática...`);
+          
+          // Clear previous leader state so election is not short-circuited
+          this.coordinatorId = null;
+          
           this.initiateElection();
         }
       } else if (this.isCoordinator) {
@@ -259,16 +214,12 @@ class BullyElectionNode extends EventEmitter {
    * Configurar servidor Socket.io para receber mensagens
    */
   setupIOServer(ioServer) {
+    this.ioServer = ioServer;
     ioServer.on('connection', (socket) => {
       console.log(`   🔌 Novo nó conectado ao servidor`);
 
-      socket.on('ready_message', (data) => {
-        console.log(`   🤝 [${this.config.name}] Recebeu READY de ${data.fromName} (ID=${data.fromId})`);
-        this.readyNodes.add(data.fromId);
-      });
-
       socket.on('election_message', (data) => {
-        this.handleElectionMessage(data);
+        this.handleElectionMessage(data, socket);  // ← PASS SOCKET
       });
 
       socket.on('ok_message', (data) => {
@@ -315,7 +266,7 @@ class BullyElectionNode extends EventEmitter {
       // Isso previne que nós com ID baixo se elegem LÍDER quando nós com ID alto estão ainda iniciando
       setTimeout(() => {
         // Se ainda ninguém respondeu, me elejo
-        if (this.receivedOkResponses.length === 0 && !this.inElection) {
+        if (this.receivedOkResponses.length === 0) {
           console.log(`   ✅ [${this.config.name}] Confirmado: nenhum OK recebido, me elegendo...`);
           this.becomeCoordinator();
         }
@@ -355,24 +306,39 @@ class BullyElectionNode extends EventEmitter {
   /**
    * Lidar com mensagem ELECTION
    */
-  handleElectionMessage(data) {
+  handleElectionMessage(data, serverSocket = null) {
     console.log(`   📨 [${this.config.name}] Recebeu ELECTION de ${data.fromName} (ID=${data.fromId}, epoch=${data.epoch})`);
 
-    // Responder com OK
-    const socket = this.otherNodes.get(data.fromId);
-    if (socket && socket.connected) {
-      console.log(`   📤 [${this.config.name}] Enviando OK para ID=${data.fromId} (epoch=${data.epoch})`);
-      socket.emit('ok_message', {
+    // ✅ RESPONDER COM OK VIA SERVER SOCKET (se disponível) ou via client socket
+    if (serverSocket) {
+      console.log(`   📤 [${this.config.name}] Enviando OK DIRETO via server socket para ID=${data.fromId}`);
+      serverSocket.emit('ok_message', {
         fromId: this.nodeId,
         fromName: this.config.name,
-        epoch: data.epoch  // ✅ Passar epoch do candidato
+        epoch: data.epoch
       });
+    } else {
+      // Fallback para client socket
+      const socket = this.otherNodes.get(data.fromId);
+      if (socket && socket.connected) {
+        console.log(`   📤 [${this.config.name}] Enviando OK para ID=${data.fromId} (epoch=${data.epoch})`);
+        socket.emit('ok_message', {
+          fromId: this.nodeId,
+          fromName: this.config.name,
+          epoch: data.epoch
+        });
+      }
     }
 
     // Iniciar eleição própria se tem ID maior
     if (data.fromId < this.nodeId && !this.inElection) {
-      console.log(`   🔄 [${this.config.name}] Iniciando eleição própria (ID ${this.nodeId} > ${data.fromId})`);
-      this.initiateElection();
+      if (this.isCoordinator) {
+        console.log(`   👑 [${this.config.name}] Sou o LÍDER, re-confirmando liderança para ID=${data.fromId}`);
+        this.becomeCoordinator();
+      } else {
+        console.log(`   🔄 [${this.config.name}] Iniciando eleição própria (ID ${this.nodeId} > ${data.fromId})`);
+        this.initiateElection();
+      }
     }
   }
 
@@ -392,10 +358,12 @@ class BullyElectionNode extends EventEmitter {
   handleCoordinatorMessage(data) {
     console.log(`   👑 [${this.config.name}] NOVO COORDENADOR: ${data.fromName} (ID=${data.fromId}, epoch=${data.epoch})`);
     
-    // ✅ FIX CRÍTICA: Validar epoch ANTES de aceitar novo LÍDER
+    // ✅ FIX CRÍTICA: Validar epoch ANTES de aceitar novo LÍDER, 
+    // mas SEMPRE aceitar se o ID for MAIOR que o líder atual (ex: Nó maior reiniciou e perdeu o epoch)
+    const isHigherIdThanCurrentLeader = (this.coordinatorId === null) || (data.fromId > this.coordinatorId);
     
-    // Se epoch do novo coordenador é MENOR do que o que conheço, rejeitar
-    if (data.epoch < this.coordinatorEpoch) {
+    // Se epoch do novo coordenador é MENOR do que o que conheço e ELE NÃO É MAIOR em ID, rejeitar
+    if (data.epoch < this.coordinatorEpoch && !isHigherIdThanCurrentLeader) {
       console.log(`   ⚠️  [${this.config.name}] REJEITADO! epoch ${data.epoch} < atual ${this.coordinatorEpoch}`);
       return;
     }
@@ -449,6 +417,16 @@ class BullyElectionNode extends EventEmitter {
             timestamp: Date.now()
           });
         }
+      }
+
+      // ✅ FIX: Notificar também os clientes conectados ao nosso servidor
+      if (this.ioServer) {
+        this.ioServer.emit('coordinator_message', {
+          fromId: this.nodeId,
+          fromName: this.config.name,
+          epoch: this.coordinatorEpoch,
+          timestamp: Date.now()
+        });
       }
     }, 500);  // 500ms delay para sockets estabilizarem
 
@@ -696,13 +674,12 @@ server.listen(config.port, async () => {
 
   // Conectar a outros nós
   await bullyNode.connectToOtherNodes(io);
-
-  // ✅ NEW: Sincronizar com outros nós antes de iniciar eleição
-  await bullyNode.waitForAllNodesToBeReady();
-
-  // Aguardar um pouco mais e iniciar eleição (agora que todos estão prontos)
-  console.log(`\n   🎯 Iniciando eleição inicial...`);
-  bullyNode.initiateElection();
+  
+  // Aguardar 500ms para sockets estabilizarem e DEPOIS iniciar eleição
+  setTimeout(() => {
+    console.log(`\n   🎯 Iniciando eleição inicial...`);
+    bullyNode.initiateElection();
+  }, 500);
 });
 
 // ========================================
