@@ -1,0 +1,6 @@
+com\microchefs\produtoservice\ProdutoServiceApplication.class
+com\microchefs\produtoservice\model\Produto.class
+com\microchefs\produtoservice\repository\ProdutoRepository.class
+com\microchefs\produtoservice\model\Produto$ProdutoBuilder.class
+com\microchefs\produtoservice\service\ProdutoService.class
+com\microchefs\produtoservice\controller\ProdutoController.class
