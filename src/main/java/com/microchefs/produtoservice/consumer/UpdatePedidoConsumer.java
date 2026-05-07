@@ -40,12 +40,21 @@ public class UpdatePedidoConsumer {
 
     @Retryable(maxAttempts = 3, backoff = @Backoff(delay = 5000), retryFor = { InfraException.class })
     public void processarAtualizacao(UpdatePedidoDTO update) {
+        validarStatus(update.statusPedido());
         try {
             // Send to WebSocket
             messagingTemplate.convertAndSend("/topic/pedido-status", update);
             System.out.println("Status do pedido " + update.id() + " enviado para o front via WebSocket: " + update.statusPedido());
         } catch (Exception e) {
             throw new InfraException("Erro ao processar atualização: " + e.getMessage());
+        }
+    }
+
+    private void validarStatus(String status) {
+        boolean valido = java.util.Arrays.stream(new String[]{"CRIADO", "AGUARDANDO_PAGAMENTO", "PAGO", "EM_PREPARO", "PRONTO", "CANCELADO"})
+                .anyMatch(s -> s.equals(status));
+        if (!valido) {
+            throw new ErroPedidoException("Status inválido: " + status);
         }
     }
 
